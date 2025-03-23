@@ -67,7 +67,7 @@ function App() {
   }, [keyUser]);
 
   return (
-    <div className="app-container">
+    <div className="app-container flex flex-col items-center">
       <h1>Control de Asistencia</h1>
       <Schedule
         editarHorario={editarHorario}
@@ -81,32 +81,37 @@ function App() {
         horaSalidaTarde={horaSalidaTarde}
         setHoraSalidaTarde={setHoraSalidaTarde}
       />
-      <label>Key User:</label>
-      <input
-        type="text"
-        className="bg-gray-600 border border-white text-center"
-        onChange={(e) => setKeyUser(e.target.value)}
-        value={keyUser}
-        placeholder="Ingrese la clave de usuario"
-      />
-      <br />
-      <label>Selecciona un empleado:</label>
-      <select
-        onChange={(e) => setEmpleadoSeleccionado(e.target.value)}
-        className="custom-select bg-gray-600 border border-white text-center"
-      >
-        <option value="">Todos</option>
-        {empleados.length > 0 ? (
-          empleados.map((empleado) => (
-            <option key={empleado.id} value={empleado.id}>
-              {empleado.nombre} - {empleado.departamento}
-            </option>
-          ))
-        ) : (
-          <option disabled>Cargando empleados...</option>
-        )}
-      </select>
-
+      <span className="w-3/4 p-1 flex flex-col gap-1">
+        <span className="flex justify-center gap-3">
+          <label>Key User:</label>
+          <input
+            type="text"
+            className="bg-gray-600 border border-white text-center"
+            onChange={(e) => setKeyUser(e.target.value)}
+            value={keyUser}
+            placeholder="Ingrese la clave de usuario"
+          />
+        </span>
+        <span className="flex justify-center gap-3">
+          <label>Selecciona un empleado:</label>
+          <select
+            onChange={(e) => setEmpleadoSeleccionado(e.target.value)}
+            className="custom-select bg-gray-600 border border-white text-center"
+          >
+            <option value="">Todos</option>
+            {empleados.length > 0 ? (
+              empleados.map((empleado) => (
+                <option key={empleado.id} value={empleado.id}>
+                  {empleado.nombre} - {empleado.departamento}
+                </option>
+              ))
+            ) : (
+              <option disabled>Cargando empleados...</option>
+            )}
+          </select>
+        </span>
+      </span>
+      
       <DataTable
         empleadoId={empleadoSeleccionado}
         empleados={empleados}

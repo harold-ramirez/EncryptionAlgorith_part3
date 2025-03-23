@@ -1,3 +1,9 @@
+/*
+*{
+  border: red 1px solid;
+}
+*/
+
 /* Estilos generales para centrar el contenido */
 body {
   font-family: Arial, sans-serif;
@@ -12,8 +18,10 @@ body {
 
 /* Contenedor principal de la tabla */
 .data-table-container {
-  max-width: 1200px;
-  width: 90%;
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  width: 1400px;
   margin: 20px auto;
   padding: 20px;
   background-color: #fff;
@@ -31,6 +39,7 @@ body {
 
 /* Contenedor de cada empleado */
 .empleado-container {
+  width: 330.5px;
   margin-bottom: 30px;
   padding: 15px;
   background-color: #333;

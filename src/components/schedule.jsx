@@ -1,3 +1,6 @@
+import { useState } from "react";
+import Consolidado from "./consolidado";
+
 export default function Schedule({
   editarHorario,
   setEditarHorario,
@@ -13,12 +16,14 @@ export default function Schedule({
   const handleEditarHorario = () => {
     setEditarHorario(!editarHorario);
   };
+    const [mostrarConsolidado, setMostrarConsolidado] = useState(false); // Estado para el modal
+  
 
   return (
     <div
       className={`flex flex-col border ${
         editarHorario ? `border-red-500` : `border-blue-500`
-      } rounded-lg text-left p-3 justify-center my-2`}
+      } w-1/2 rounded-lg text-left p-3 justify-center my-2`}
     >
       <b>Turno Mañana:</b>
       <div className="flex flex-row justify-around">
@@ -66,14 +71,25 @@ export default function Schedule({
           className="border border-white px-2"
         />
       </div>
-      <span className="flex justify-end">
+      <span className="flex justify-around">
         <input
           type="button"
-          value={`${editarHorario ? `Guardar` : `Editar`}`}
+          value="Generar Consolidado"
+          onClick={() => setMostrarConsolidado(true)}
+          className="bg-green-900 w-1/3 p-1 border border-white rounded-md"
+        />
+        <input
+          type="button"
+          value={`${editarHorario ? `Guardar` : `Editar Turnos`}`}
           onClick={handleEditarHorario}
-          className="bg-gray-800 w-1/3 border border-white rounded-md"
+          className="bg-gray-800 w-1/3 p-1 border border-white rounded-md"
         />
       </span>
+      {mostrarConsolidado && (
+        <Consolidado
+          onClose={() => setMostrarConsolidado(false)}
+        />
+      )}
     </div>
   );
 }
