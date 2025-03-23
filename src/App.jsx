@@ -31,21 +31,31 @@ function App() {
               departamento: desencriptarDatos(datos.Departamento, keyUser),
               registros: (datos.Registros || []).map((registro) => ({
                 fecha: desencriptarDatos(registro.Fecha, keyUser),
-                entradas: (registro.Entradas || []).map((entrada) =>
-                  desencriptarDatos(entrada, keyUser)
-                ),
-                salidas: (registro.Salidas || []).map((salida) =>
-                  desencriptarDatos(salida, keyUser)
-                ),
+                turnoMañana: {
+                  entrada: registro.TurnoMañana?.Entrada
+                    ? desencriptarDatos(registro.TurnoMañana.Entrada, keyUser)
+                    : "N/A",
+                  salida: registro.TurnoMañana?.Salida
+                    ? desencriptarDatos(registro.TurnoMañana.Salida, keyUser)
+                    : "N/A",
+                },
+                turnoTarde: {
+                  entrada: registro.TurnoTarde?.Entrada
+                    ? desencriptarDatos(registro.TurnoTarde.Entrada, keyUser)
+                    : "N/A",
+                  salida: registro.TurnoTarde?.Salida
+                    ? desencriptarDatos(registro.TurnoTarde.Salida, keyUser)
+                    : "N/A",
+                },
               })),
               resumen: {
-                totalEntradas: datos.Resumen
+                totalEntradas: datos.Resumen.TotalEntradas
                   ? desencriptarDatos(datos.Resumen.TotalEntradas, keyUser)
                   : "0",
-                totalSalidas: datos.Resumen
+                totalSalidas: datos.Resumen.TotalSalidas
                   ? desencriptarDatos(datos.Resumen.TotalSalidas, keyUser)
                   : "0",
-                tiempoTotal: datos.Resumen
+                tiempoTotal: datos.Resumen.TiempoTotal
                   ? desencriptarDatos(datos.Resumen.TiempoTotal, keyUser)
                   : "0:00",
               },
@@ -80,20 +90,21 @@ function App() {
         setHoraEntradaTarde={setHoraEntradaTarde}
         horaSalidaTarde={horaSalidaTarde}
         setHoraSalidaTarde={setHoraSalidaTarde}
+        empleados={empleados}
       />
       <span className="w-3/4 p-1 flex flex-col gap-1">
         <span className="flex justify-center gap-3">
-          <label>Key User:</label>
+          <label>🗝️Key User:</label>
           <input
             type="text"
             className="bg-gray-600 border border-white text-center"
             onChange={(e) => setKeyUser(e.target.value)}
             value={keyUser}
             placeholder="Ingrese la clave de usuario"
-          />
+          />🗝️
         </span>
         <span className="flex justify-center gap-3">
-          <label>Selecciona un empleado:</label>
+          <label>📃Selecciona un empleado:</label>
           <select
             onChange={(e) => setEmpleadoSeleccionado(e.target.value)}
             className="custom-select bg-gray-600 border border-white text-center"
@@ -108,16 +119,16 @@ function App() {
             ) : (
               <option disabled>Cargando empleados...</option>
             )}
-          </select>
+          </select>📃
         </span>
       </span>
-      
+
       <DataTable
-        empleadoId={empleadoSeleccionado}
         empleados={empleados}
+        empleadoId={empleadoSeleccionado}
         horaEntradaMañana={horaEntradaMañana}
-        horaSalidaMañana={horaSalidaMañana}
         horaEntradaTarde={horaEntradaTarde}
+        horaSalidaMañana={horaSalidaMañana}
         horaSalidaTarde={horaSalidaTarde}
       />
     </div>

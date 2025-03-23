@@ -16,6 +16,8 @@ const rl = readline.createInterface({
   output: process.stdout,
 });
 
+console.log(`👀 Monitoreando la carpeta: ${baseFolderPath}`);
+
 // Pedir al usuario la clave
 rl.question("Por favor, ingrese la clave: ", (PASSWORD) => {
   console.log("Clave recibida:", PASSWORD);
@@ -68,6 +70,10 @@ const leerArchivosDeCarpetas = async (PASSWORD) => {
 // Modificar procesarArchivo para aceptar la clave como parámetro
 const procesarArchivo = async (filePath, PASSWORD) => {
   try {
+    if (!PASSWORD) {
+      PASSWORD = "clave-segura"; // clave por defecto
+    }
+
     const contenido = fs.readFileSync(filePath, "utf8");
     const lineas = contenido
       .split("\n")
@@ -90,36 +96,59 @@ const procesarArchivo = async (filePath, PASSWORD) => {
           Nombre: partes[4]?.trim() || "Sin Nombre",
           Departamento: partes[8]?.trim() || "No especificado",
           Registros: [],
+          Resumen: {}, // Inicializar el resumen
         };
       }
 
       // Detectar registros de asistencia
       else if (linea.match(/^\d{2}\/\d{2}\/\d{4} \d{2}:\d{2}/)) {
         const datos = linea.split(",");
-        let entradas = [];
-        let salidas = [];
+        const fecha = datos[0]?.trim().split(" ")[0]; // Extraer solo la fecha
+        const horarios = [
+          { tipo: "Entrada", hora: datos[0]?.trim().split(" ")[1] || null },
+          { tipo: "Salida", hora: datos[3]?.trim().split(" ")[1] || null },
+          { tipo: "Entrada", hora: datos[5]?.trim().split(" ")[1] || null },
+          { tipo: "Salida", hora: datos[7]?.trim().split(" ")[1] || null },
+        ];
 
-        for (let i = 0; i < datos.length; i++) {
-          const dato = datos[i]?.trim();
-          if (dato.includes("Entrada")) {
-            entradas.push(datos[i - 1]?.trim().split(" ")[1]); // Extraer solo la hora
+        // Clasificar horarios en turnos
+        const turnos = {
+          TurnoMañana: { Entrada: null, Salida: null },
+          TurnoTarde: { Entrada: null, Salida: null },
+        };
+
+        horarios.forEach((horario) => {
+          if (horario.hora) {
+            const [hora, minuto] = horario.hora.split(":").map(Number);
+            const tiempo = hora + minuto / 60; // Convertir a formato decimal
+
+            if (tiempo >= 6 && tiempo <= 12) {
+              if (!turnos.TurnoMañana.Entrada)
+                turnos.TurnoMañana.Entrada = horario.hora;
+            } else if (tiempo > 12 && tiempo <= 14) {
+              if (!turnos.TurnoMañana.Salida)
+                turnos.TurnoMañana.Salida = horario.hora;
+            } else if (tiempo > 14 && tiempo <= 18) {
+              if (!turnos.TurnoTarde.Entrada)
+                turnos.TurnoTarde.Entrada = horario.hora;
+            } else if (tiempo > 18 && tiempo <= 22) {
+              if (!turnos.TurnoTarde.Salida)
+                turnos.TurnoTarde.Salida = horario.hora;
+            }
           }
-          if (dato.includes("Salida")) {
-            salidas.push(datos[i - 1]?.trim().split(" ")[1]); // Extraer solo la hora
-          }
-        }
+        });
 
         if (empleadoActual) {
           empleadoActual.Registros.push({
-            Fecha: datos[0]?.trim().split(" ")[0], // Extraer solo la fecha
-            Entradas: entradas,
-            Salidas: salidas,
+            Fecha: fecha,
+            TurnoMañana: turnos.TurnoMañana,
+            TurnoTarde: turnos.TurnoTarde,
           });
         }
       }
 
-      // Detectar resumen del empleado
-      else if (linea.startsWith("Entrada") && empleadoActual) {
+      // Detectar el resumen del empleado
+      else if (linea.startsWith("Entrada")) {
         const partes = linea.split(",");
         empleadoActual.Resumen = {
           TotalEntradas: partes[1]?.trim() || "0",
@@ -134,26 +163,30 @@ const procesarArchivo = async (filePath, PASSWORD) => {
       empleados.push(empleadoActual);
     }
 
-    // Mostrar los datos que se enviarán a Firestore
-    console.log(
-      "Datos a enviar a Firestore:",
-      JSON.stringify(empleados, null, 2)
-    );
-
-    // Enviar los datos a Firestore
+    // Subir los datos a Firebase
     for (const empleado of empleados) {
-      const empleadoRef = db.collection("asistencia").doc(empleado.ID); // Usar el ID como identificador del documento
+      const empleadoRef = db.collection("asistencia").doc(empleado.ID);
       await empleadoRef.set({
         Nombre: cifrarDatos(empleado.Nombre, PASSWORD),
         Departamento: cifrarDatos(empleado.Departamento, PASSWORD),
         Registros: empleado.Registros.map((registro) => ({
           Fecha: cifrarDatos(registro.Fecha, PASSWORD),
-          Entradas: registro.Entradas.map((entrada) =>
-            cifrarDatos(entrada, PASSWORD)
-          ),
-          Salidas: registro.Salidas.map((salida) =>
-            cifrarDatos(salida, PASSWORD)
-          ),
+          TurnoMañana: {
+            Entrada: registro.TurnoMañana.Entrada
+              ? cifrarDatos(registro.TurnoMañana.Entrada, PASSWORD)
+              : null,
+            Salida: registro.TurnoMañana.Salida
+              ? cifrarDatos(registro.TurnoMañana.Salida, PASSWORD)
+              : null,
+          },
+          TurnoTarde: {
+            Entrada: registro.TurnoTarde.Entrada
+              ? cifrarDatos(registro.TurnoTarde.Entrada, PASSWORD)
+              : null,
+            Salida: registro.TurnoTarde.Salida
+              ? cifrarDatos(registro.TurnoTarde.Salida, PASSWORD)
+              : null,
+          },
         })),
         Resumen: {
           TotalEntradas: cifrarDatos(empleado.Resumen.TotalEntradas, PASSWORD),
@@ -161,7 +194,7 @@ const procesarArchivo = async (filePath, PASSWORD) => {
           TiempoTotal: cifrarDatos(empleado.Resumen.TiempoTotal, PASSWORD),
         },
       });
-      console.log(`✅ Empleado ${empleado.Nombre} enviado a Firestore`);
+      console.log(`✅ Empleado ${empleado.Nombre} enviado a Firebase`);
     }
 
     console.log(`✅ Archivo procesado correctamente: ${filePath}`);
@@ -169,8 +202,6 @@ const procesarArchivo = async (filePath, PASSWORD) => {
     console.error(`❌ Error procesando el archivo ${filePath}:`, error);
   }
 };
-
-// leerArchivosDeCarpetas();
 
 // Monitorear la carpeta
 fs.watch(baseFolderPath, { recursive: true }, (eventType, filename) => {
@@ -182,5 +213,3 @@ fs.watch(baseFolderPath, { recursive: true }, (eventType, filename) => {
     }
   }
 });
-
-console.log(`👀 Monitoreando la carpeta: ${baseFolderPath}`);

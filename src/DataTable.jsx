@@ -2,21 +2,22 @@ import React from "react";
 
 const DataTable = ({
   empleados,
-  empleadoId, // Agregamos empleadoId como prop
+  empleadoId,
   horaEntradaMañana,
   horaSalidaMañana,
   horaEntradaTarde,
   horaSalidaTarde,
 }) => {
-  // Filtrar el empleado seleccionado si se proporciona un ID
   const empleadosFiltrados = empleadoId
     ? empleados.filter((empleado) => empleado.id === empleadoId)
     : empleados;
 
   return (
     <div className="data-table-container">
-      {empleadosFiltrados.length === 0 ? ( // Verificar si no hay datos
-        <p className="w-full text-center text-gray-500">No hay datos por el momento...</p>
+      {empleadosFiltrados.length === 0 ? (
+        <p className="w-full text-center text-gray-500">
+          No hay datos por el momento...
+        </p>
       ) : (
         empleadosFiltrados.map((empleado, index) => (
           <div key={index} className="empleado-container">
@@ -26,52 +27,64 @@ const DataTable = ({
             <table className="styled-table">
               <thead>
                 <tr>
-                  <th>Fecha</th>
-                  <th>Entradas</th>
-                  <th>Salidas</th>
+                  <th rowSpan={2}>Fecha</th>
+                  <th colSpan={2}>Turno Mañana</th>
+                  <th colSpan={2}>Turno Tarde</th>
+                </tr>
+                <tr>
+                  <th>Entrada</th>
+                  <th>Salida</th>
+                  <th>Entrada</th>
+                  <th>Salida</th>
                 </tr>
               </thead>
               <tbody>
                 {empleado.registros.map((registro, i) => (
                   <tr key={i}>
-                    <td>{registro.fecha || "No disponible"}</td>
+                    <td>{registro.fecha || "N/A"}</td>
                     <td
                       className={`${
-                        registro.entradas.some(
-                          (entrada) => entrada > horaEntradaTarde
-                        )
+                        registro.turnoMañana.entrada !== "N/A"
+                          ? registro.turnoMañana.entrada > horaEntradaMañana
                           ? `text-red-400 font-bold`
-                          : registro.entradas.some(
-                              (entrada) =>
-                                entrada > horaEntradaMañana &&
-                                entrada < horaSalidaMañana
-                            )
-                          ? `text-red-400 font-bold`
+                          : ``
                           : ``
                       }`}
                     >
-                      {registro.entradas.length > 0
-                        ? registro.entradas.join(" ")
-                        : "No hay entradas"}
+                      {registro.turnoMañana?.entrada}
                     </td>
                     <td
                       className={`${
-                        registro.salidas.some(
-                          (salida) => salida < horaSalidaMañana
-                        )
+                        registro.turnoMañana.salida !== "N/A"
+                          ? registro.turnoMañana.salida < horaSalidaMañana
                           ? `text-red-400 font-bold`
-                          : registro.salidas.some(
-                              (salida) =>
-                                salida > horaEntradaTarde &&
-                                salida < horaSalidaTarde
-                            )
-                          ? `text-red-400 font-bold`
+                          : ``
                           : ``
                       }`}
                     >
-                      {registro.salidas.length > 0
-                        ? registro.salidas.join(" ")
-                        : "No hay salidas"}
+                      {registro.turnoMañana?.salida}
+                    </td>
+                    <td
+                      className={`${
+                        registro.turnoTarde.entrada !== "N/A"
+                          ? registro.turnoTarde.entrada > horaEntradaTarde
+                          ? `text-red-400 font-bold`
+                          : ``
+                          : ``
+                      }`}
+                    >
+                      {registro.turnoTarde?.entrada}
+                    </td>
+                    <td
+                      className={`${
+                        registro.turnoTarde.salida !== "N/A"
+                          ? registro.turnoTarde.salida < horaSalidaTarde
+                          ? `text-red-400 font-bold`
+                          : ``
+                          : ``
+                      }`}
+                    >
+                      {registro.turnoTarde?.salida}
                     </td>
                   </tr>
                 ))}
