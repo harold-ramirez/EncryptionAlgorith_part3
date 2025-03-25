@@ -19,7 +19,7 @@ function App() {
   useEffect(() => {
     const obtenerEmpleados = async () => {
       try {
-        const empleadosRef = collection(database, "asistencia");
+        const empleadosRef = collection(database, "dario");
         const snapshot = await getDocs(empleadosRef);
 
         if (!snapshot.empty) {

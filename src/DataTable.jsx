@@ -27,67 +27,59 @@ const DataTable = ({
             <table className="styled-table">
               <thead>
                 <tr>
-                  <th rowSpan={2}>Fecha</th>
-                  <th colSpan={2}>Turno Mañana</th>
-                  <th colSpan={2}>Turno Tarde</th>
-                </tr>
-                <tr>
+                  <th>Fecha</th>
                   <th>Entrada</th>
                   <th>Salida</th>
-                  <th>Entrada</th>
-                  <th>Salida</th>
+                  <th>Horas Trabajadas</th>
                 </tr>
               </thead>
               <tbody>
-                {empleado.registros.map((registro, i) => (
-                  <tr key={i}>
-                    <td>{registro.fecha || "N/A"}</td>
-                    <td
-                      className={`${
-                        registro.turnoMañana.entrada !== "N/A"
-                          ? registro.turnoMañana.entrada > horaEntradaMañana
-                          ? `text-red-400 font-bold`
-                          : ``
-                          : ``
-                      }`}
-                    >
-                      {registro.turnoMañana?.entrada}
-                    </td>
-                    <td
-                      className={`${
-                        registro.turnoMañana.salida !== "N/A"
-                          ? registro.turnoMañana.salida < horaSalidaMañana
-                          ? `text-red-400 font-bold`
-                          : ``
-                          : ``
-                      }`}
-                    >
-                      {registro.turnoMañana?.salida}
-                    </td>
-                    <td
-                      className={`${
-                        registro.turnoTarde.entrada !== "N/A"
-                          ? registro.turnoTarde.entrada > horaEntradaTarde
-                          ? `text-red-400 font-bold`
-                          : ``
-                          : ``
-                      }`}
-                    >
-                      {registro.turnoTarde?.entrada}
-                    </td>
-                    <td
-                      className={`${
-                        registro.turnoTarde.salida !== "N/A"
-                          ? registro.turnoTarde.salida < horaSalidaTarde
-                          ? `text-red-400 font-bold`
-                          : ``
-                          : ``
-                      }`}
-                    >
-                      {registro.turnoTarde?.salida}
-                    </td>
-                  </tr>
-                ))}
+                {empleado.registros.map((registro, i) => {
+                  // Calculate worked hours
+                  const entrada = registro.turnoMañana?.entrada !== "N/A" ? registro.turnoMañana.entrada : null;
+                  const salida = registro.turnoMañana?.salida !== "N/A" ? registro.turnoMañana.salida : null;
+                  
+                  let horasTrabajadas = "N/A";
+                  if (entrada && salida) {
+                    const [hEntrada, mEntrada] = entrada.split(':').map(Number);
+                    const [hSalida, mSalida] = salida.split(':').map(Number);
+                    
+                    const minutosEntrada = hEntrada * 60 + mEntrada;
+                    const minutosSalida = hSalida * 60 + mSalida;
+                    const diferencia = minutosSalida - minutosEntrada;
+                    
+                    if (diferencia > 0) {
+                      const horas = Math.floor(diferencia / 60);
+                      const minutos = diferencia % 60;
+                      horasTrabajadas = `${horas}:${minutos.toString().padStart(2, '0')}`;
+                    }
+                  }
+
+                  return (
+                    <tr key={i}>
+                      <td>{registro.fecha || "N/A"}</td>
+                      <td
+                        className={`${
+                          entrada && entrada > horaEntradaMañana
+                            ? "text-red-400 font-bold"
+                            : ""
+                        }`}
+                      >
+                        {entrada || "N/A"}
+                      </td>
+                      <td
+                        className={`${
+                          salida && salida < horaSalidaMañana
+                            ? "text-red-400 font-bold"
+                            : ""
+                        }`}
+                      >
+                        {salida || "N/A"}
+                      </td>
+                      <td>{horasTrabajadas}</td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
